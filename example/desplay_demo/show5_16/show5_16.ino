@@ -1,29 +1,9 @@
-//测试通过
+//全是球，采用
 #define LGFX_USE_V1
-
 #include <LovyanGFX.hpp>
-#include <SPI.h>
-
-#define I2C_SCL 39
-#define I2C_SDA 38
 
 #define LCD_CS 37
 #define LCD_BLK 45
-
-//#define NS2009_TOUCH  //Resistive screen driver
-#define FT6236_TOUCH //Capacitive screen driver
-
-#ifdef NS2009_TOUCH
-#include "NS2009.h"
-const int i2c_touch_addr = NS2009_ADDR;
-#define get_pos ns2009_pos
-#endif
-
-#ifdef FT6236_TOUCH
-#include "FT6236.h"
-const int i2c_touch_addr = TOUCH_I2C_ADD;
-#define get_pos ft6236_pos
-#endif
 
 class LGFX : public lgfx::LGFX_Device
 {
@@ -98,7 +78,58 @@ public:
     }
 };
 
-LGFX lcd;
+static LGFX lcd;
+
+static std::uint32_t sec, psec;
+static std::uint32_t fps = 0, frame_count = 0;
+static std::int32_t lcd_width;
+static std::int32_t lcd_height;
+
+struct obj_info_t
+{
+    std::int32_t x;
+    std::int32_t y;
+    std::int32_t r;
+    std::int32_t dx;
+    std::int32_t dy;
+    std::uint32_t color;
+
+    void move()
+    {
+        x += dx;
+        y += dy;
+        if (x < 0)
+        {
+            x = 0;
+            if (dx < 0)
+                dx = -dx;
+        }
+        else if (x >= lcd_width)
+        {
+            x = lcd_width - 1;
+            if (dx > 0)
+                dx = -dx;
+        }
+        if (y < 0)
+        {
+            y = 0;
+            if (dy < 0)
+                dy = -dy;
+        }
+        else if (y >= lcd_height)
+        {
+            y = lcd_height - 1;
+            if (dy > 0)
+                dy = -dy;
+        }
+    }
+};
+
+static constexpr std::uint32_t obj_count = 200;
+static obj_info_t objects[obj_count];
+
+static LGFX_Sprite sprites[2];
+static int_fast16_t sprite_height;
 
 void setup(void)
 {
@@ -108,69 +139,83 @@ void setup(void)
     digitalWrite(LCD_CS, LOW);
     digitalWrite(LCD_BLK, HIGH);
 
-    Serial.begin(115200);
     lcd.init();
 
-    //I2C init
-    Wire.begin(I2C_SDA, I2C_SCL);
-    byte error, address;
-
-    Wire.beginTransmission(i2c_touch_addr);
-    error = Wire.endTransmission();
-
-    if (error == 0)
+    lcd_width = lcd.width();
+    lcd_height = lcd.height();
+    obj_info_t *a;
+    for (std::uint32_t i = 0; i < obj_count; ++i)
     {
-        Serial.print("I2C device found at address 0x");
-        Serial.print(i2c_touch_addr, HEX);
-        Serial.println("  !");
+        a = &objects[i];
+        a->color = (uint32_t)rand() | 0x808080U;
+        a->x = random(lcd_width);
+        a->y = random(lcd_height);
+        a->dx = random(1, 4) * (i & 1 ? 1 : -1);
+        a->dy = random(1, 4) * (i & 2 ? 1 : -1);
+        a->r = 8 + (i & 0x07);
     }
-    else if (error == 4)
+
+    uint32_t div = 2;
+    for (;;)
     {
-        Serial.print("Unknown error at address 0x");
-        Serial.println(i2c_touch_addr, HEX);
+        sprite_height = (lcd_height + div - 1) / div;
+        bool fail = false;
+        for (std::uint32_t i = 0; !fail && i < 2; ++i)
+        {
+            sprites[i].setColorDepth(lcd.getColorDepth());
+            sprites[i].setFont(&fonts::Font2);
+            fail = !sprites[i].createSprite(lcd_width, sprite_height);
+        }
+        if (!fail)
+            break;
+        for (std::uint32_t i = 0; i < 2; ++i)
+        {
+            sprites[i].deleteSprite();
+        }
+        ++div;
     }
+    lcd.startWrite();
+    lcd.setAddrWindow(0, 0, lcd_width, lcd_height);
 }
 
-static int colors[] = {TFT_RED, TFT_GREEN, TFT_BLUE, TFT_CYAN, TFT_MAGENTA, TFT_YELLOW};
-
-int last_x = 240;
-int last_y = 160;
-int pos[2] = {0, 0};
-
-//fps
-static int prev_sec;
-static int fps;
-
-void loop()
+void loop(void)
 {
+    static std::uint_fast8_t flip = 0;
 
-    int sec = millis() / 1000;
-    if (prev_sec != sec)
+    obj_info_t *a;
+    for (std::uint32_t i = 0; i != obj_count; i++)
     {
-        prev_sec = sec;
-        lcd.setCursor(0, 440);
-        lcd.setTextSize(4);
-        lcd.printf("fps:%03d", fps);
-        fps = 0;
+        objects[i].move();
+    }
+    for (std::int32_t y = 0; y < lcd_height; y += sprite_height)
+    {
+        flip = flip ? 0 : 1;
+        sprites[flip].clear();
+        for (std::uint32_t i = 0; i != obj_count; i++)
+        {
+            a = &objects[i];
+            if ((a->y + a->r >= y) && (a->y - a->r <= y + sprite_height))
+                sprites[flip].drawCircle(a->x, a->y - y, a->r, a->color);
+        }
+
+        if (y == 0)
+        {
+            sprites[flip].setCursor(1, 1);
+            sprites[flip].setTextColor(TFT_BLACK);
+            sprites[flip].printf("obj:%d fps:%d", obj_count, fps);
+            sprites[flip].setCursor(0, 0);
+            sprites[flip].setTextColor(TFT_WHITE);
+            sprites[flip].printf("obj:%d fps:%d", obj_count, fps);
+        }
+        sprites[flip].pushSprite(&lcd, 0, y);
     }
 
-    if (get_pos(pos))
+    ++frame_count;
+    sec = millis() / 1000;
+    if (psec != sec)
     {
-        draw_ball(pos[0], pos[1], 50, TFT_RED);
-        ++fps;
-
-        last_x = pos[0];
-        last_y = pos[1];
-
-        Serial.print("x = ");
-        Serial.print(last_x);
-        Serial.print(", y = ");
-        Serial.print(last_y);
-        Serial.println();
+        psec = sec;
+        fps = frame_count;
+        frame_count = 0;
     }
-}
-void draw_ball(int x, int y, int r, int color)
-{
-    lcd.fillCircle(last_x, last_y, r, TFT_BLACK);
-    lcd.fillCircle(x, y, r, color);
 }

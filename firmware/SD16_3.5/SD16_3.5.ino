@@ -106,6 +106,7 @@ public:
 
 LGFX lcd;
 int pos[2] = {0, 0};
+int err_code = 0;
 
 void setup()
 {
@@ -118,9 +119,24 @@ void setup()
     Serial.begin(115200);
 
     lcd.init();
+    lcd.fillScreen(TFT_BLUE);
+    lcd.setTextColor(TFT_YELLOW);
+    lcd.setTextSize(2);
+    lcd.setCursor(0, 0);
+    lcd.print("Makerfabs ESP32-S2");
+    lcd.setCursor(0, 16);
+    lcd.print("Parallel TFT with Touch");
 
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
-    SD_init();
+
+    lcd.setCursor(0, 32);
+    if (SD_init())
+    {
+        lcd.print("ERROR:   SD");
+        err_code += 1;
+    }
+    else
+        lcd.print("SD INIT OVER");
 
     //I2C init
     Wire.begin(I2C_SDA, I2C_SCL);
@@ -129,26 +145,40 @@ void setup()
     Wire.beginTransmission(i2c_touch_addr);
     error = Wire.endTransmission();
 
+    lcd.setCursor(0, 48);
     if (error == 0)
     {
         Serial.print("I2C device found at address 0x");
         Serial.print(i2c_touch_addr, HEX);
         Serial.println("  !");
+        lcd.print("TOUCH INIT OVER");
     }
-    else if (error == 4)
+    else
     {
         Serial.print("Unknown error at address 0x");
         Serial.println(i2c_touch_addr, HEX);
+        lcd.print("ERROR:   TOUCH");
+        err_code += 1;
     }
+
+    lcd.setCursor(0, 64);
+    if (err_code)
+    {
+
+        lcd.print("SOMETHING WRONG");
+        while (1)
+            ;
+    }
+    else
+        lcd.print("ALL SUCCESS");
 
     lcd.setRotation(1);
 
     int rect_length = 40;
 
-    lcd.fillScreen(TFT_BLUE);
     lcd.fillRect(240 - rect_length, 160 - rect_length, rect_length * 2, rect_length * 2, TFT_RED);
-    lcd.setTextColor(TFT_YELLOW);
-    lcd.setTextSize(2);
+
+    lcd.setCursor(100, 10);
     lcd.print(F("TOUCH RED RECT"));
 
     while (1)
@@ -168,22 +198,28 @@ void setup()
 
 void loop()
 {
+    if (get_pos(pos))
+    {
+        Serial.println((String)"x=" + pos[0] + ",y=" + pos[1]);
+    }
+
+    delay(100);
 }
 
-void SD_init()
+int SD_init()
 {
 
     if (!SD.begin(SD_CS))
     {
         Serial.println("Card Mount Failed");
-        return;
+        return 1;
     }
     uint8_t cardType = SD.cardType();
 
     if (cardType == CARD_NONE)
     {
         Serial.println("No SD card attached");
-        return;
+        return 1;
     }
 
     Serial.print("SD Card Type: ");
@@ -209,6 +245,7 @@ void SD_init()
     listDir(SD, "/", 2);
 
     Serial.println("SD init over.");
+    return 0;
 }
 
 void listDir(fs::FS &fs, const char *dirname, uint8_t levels)

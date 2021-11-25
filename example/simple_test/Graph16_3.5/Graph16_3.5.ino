@@ -191,125 +191,126 @@ void loop(void)
       d = -d;
   }
 
+
   tft.setCursor(0, 0);
   tft.setTextColor(TFT_MAGENTA);
   tft.setTextSize(2);
 
   tft.println(F("  LovyanGFX test"));
 
-  tft.setTextSize(1);
+  tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE);
   tft.println(F(""));
-  tft.setTextSize(1);
+  tft.setTextSize(2);
   tft.println(F(""));
   tft.setTextColor(tft.color565(0x80, 0x80, 0x80));
 
   tft.println(F(""));
 
   tft.setTextColor(TFT_GREEN);
-  tft.println(F(" Benchmark               microseconds"));
+  tft.println(F("Benchmark    microseconds"));
   tft.println(F(""));
   tft.setTextColor(TFT_YELLOW);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("HaD pushColor      "));
+  tft.setTextSize(2);
+  tft.print(F("HaD pushColor  "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecHaD);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Screen fill        "));
+  tft.setTextSize(2);
+  tft.print(F("Screen fill    "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecFillScreen);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Text               "));
+  tft.setTextSize(2);
+  tft.print(F("Text           "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecText);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Pixels             "));
+  tft.setTextSize(2);
+  tft.print(F("Pixels         "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecPixels);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Lines              "));
+  tft.setTextSize(2);
+  tft.print(F("Lines          "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecLines);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Horiz/Vert Lines   "));
+  tft.setTextSize(2);
+  tft.print(F("Hor/Ve Lines   "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecFastLines);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Rectangles         "));
+  tft.setTextSize(2);
+  tft.print(F("Rectangles     "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecRects);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Rectangles-filled  "));
+  tft.setTextSize(2);
+  tft.print(F("Rectan-filled  "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecFilledRects);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Circles            "));
+  tft.setTextSize(2);
+  tft.print(F("Circles        "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecCircles);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Circles-filled     "));
+  tft.setTextSize(2);
+  tft.print(F("Circles-filled "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecFilledCircles);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Triangles          "));
+  tft.setTextSize(2);
+  tft.print(F("Triangles      "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecTriangles);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Triangles-filled   "));
+  tft.setTextSize(2);
+  tft.print(F("Trian-filled   "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecFilledTrangles);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Rounded rects      "));
+  tft.setTextSize(2);
+  tft.print(F("Rounded rects  "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usecRoundRects);
 
   tft.setTextColor(TFT_CYAN);
-  tft.setTextSize(1);
-  tft.print(F("Rounded rects-fill "));
+  tft.setTextSize(2);
+  tft.print(F("Rou rects-fill "));
   tft.setTextColor(TFT_YELLOW);
   tft.setTextSize(2);
   printnice(usedFilledRoundRects);
 
-  tft.setTextSize(1);
+  tft.setTextSize(2);
   tft.println(F(""));
   tft.setTextColor(TFT_GREEN);
   tft.setTextSize(2);

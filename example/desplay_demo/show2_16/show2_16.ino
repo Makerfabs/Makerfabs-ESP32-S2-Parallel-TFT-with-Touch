@@ -1,8 +1,12 @@
-//测试通过
+//奇怪的图片旋转，不用
 #define LGFX_USE_V1
 
 #include <LovyanGFX.hpp>
-#include <vector>
+
+#include "image320x240x16.h"
+#include "image480x320x8.h"
+#include "image640x480x4.h"
+#include "image1280x960x1.h"
 
 #define LCD_CS 37
 #define LCD_BLK 45
@@ -80,9 +84,10 @@ public:
   }
 };
 
-LGFX lcd;
+static LGFX lcd;
+static LGFX_Sprite sprite;
 
-void setup(void)
+void setup()
 {
   pinMode(LCD_CS, OUTPUT);
   pinMode(LCD_BLK, OUTPUT);
@@ -91,30 +96,35 @@ void setup(void)
   digitalWrite(LCD_BLK, HIGH);
 
   lcd.init();
-}
-
-static int colors[] = {TFT_RED, TFT_GREEN, TFT_BLUE, TFT_CYAN, TFT_MAGENTA, TFT_YELLOW};
-
-int i = 0;
-
-void loop(void)
-{
-  //fps
-  static int prev_sec;
-  static int fps;
-  ++fps;
-  int sec = millis() / 1000;
-  if (prev_sec != sec)
+  if (lcd.width() < lcd.height())
   {
-    prev_sec = sec;
-    lcd.setCursor(0, 440);
-    lcd.setTextSize(4);
-    lcd.printf("fps:%03d", fps);
-    fps = 0;
+    lcd.setRotation(lcd.getRotation() ^ 1);
   }
 
-  lcd.fillRect(0, 0, 320, 440, colors[i++]);
-  //lcd.fillScreen(colors[i++]);
-  if (i > 5)
-    i = 0;
+  // setBufferを使用することで、予め用意されたデータを用いてスプライトを使用できるようにする。
+  sprite.setBuffer(const_cast<std::uint8_t *>(image320x240x16), 320, 240, 16);
+  // sprite.setBuffer(const_cast<std::uint8_t *>(image480x320x8), 480, 320, 8);
+  //  sprite.setBuffer(const_cast<std::uint8_t*>(image640x480x4),  640, 480, 4);
+  //  sprite.setBuffer(const_cast<std::uint8_t*>(image1280x960x1), 1280, 960, 1);
+  //  sprite.createPalette();
+
+  // ※ 本来const(書換不可能)なデータをconst_castにより非constと偽って使用しています。
+  // このため、このスプライトに対して描画を行うとプログラムはクラッシュします。
+  // LCDや他のスプライトに描画する関数など、読出しを行う関数のみが使用できます。
+  // OK)  sprite.pushSprite
+  // OK)  sprite.pushRotated
+  // OK)  sprite.pushRotateZoom
+  // OK)  sprite.readRect
+  // NG)  sprite.drawPixel
+  // NG)  sprite.fillRect
+  // NG)  sprite.scroll
+}
+
+void loop()
+{
+  static std::uint32_t count;
+  if (++count == 360)
+    count = 0;
+  float zoom = (((float)count) / 200) + 0.1;
+  sprite.pushRotateZoom(&lcd, lcd.width() >> 1, lcd.height() >> 1, count, zoom, zoom);
 }
