@@ -1,4 +1,4 @@
-//测试通过
+//FPS test
 #define LGFX_USE_V1
 
 #include <LovyanGFX.hpp>

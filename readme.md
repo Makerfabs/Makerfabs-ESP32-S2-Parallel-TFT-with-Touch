@@ -88,6 +88,10 @@ Three frame rate tests and SD card read and write tests.
 
 ![](md_pic/test3.gif)
 
+- PWM_backlight
+
+Use pwm control screen back light.
+
 ### Display Demo
 
 The display of 5 display effects is modified from Lovyan's example. There are also two homemade demonstration videos: ultrasonic ranging and line charts.
